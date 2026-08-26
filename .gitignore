@@ -1,0 +1,14 @@
+venv/
+__pycache__/
+__MACOSX/
+node_modules/
+*.zip
+*.pth
+.env
+.expo/
+build/
+dist/
+citrus_rag_db/
+*.pdf
+*.pptx
+*.zip

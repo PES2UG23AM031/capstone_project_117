@@ -1,0 +1,81 @@
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI",sans-serif;background:#f0f4f0;color:#222}
+.app{max-width:620px;margin:40px auto;padding:20px;text-align:center}
+h1{font-size:2rem;font-weight:700;margin-bottom:24px;color:#2e7d32}
+h3{font-size:1.1rem;font-weight:600;margin-bottom:14px;color:#1b5e20}
+
+.card{background:#fff;border-radius:16px;padding:24px;
+      box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:16px}
+.image{width:100%;max-height:300px;object-fit:contain;
+       margin:16px 0;border-radius:10px}
+.btn{width:100%;padding:14px;background:#4CAF50;color:#fff;
+     border:none;border-radius:10px;font-size:1.1rem;font-weight:600;
+     cursor:pointer;transition:background .2s}
+.btn:hover{background:#388E3C}
+
+.result-card{background:#fff;border-radius:16px;padding:22px;
+             box-shadow:0 2px 12px rgba(0,0,0,.08);
+             text-align:left;margin-bottom:16px}
+.result-card h2{font-size:1.6rem;font-weight:700;text-align:center;
+                margin-bottom:14px;color:#1b5e20}
+
+.bar{background:#e8f5e9;border-radius:30px;height:36px;
+     overflow:hidden;margin-bottom:14px}
+.confidence{height:100%;background:#4CAF50;border-radius:30px;
+            display:flex;align-items:center;justify-content:center;
+            color:#fff;font-weight:600;font-size:.95rem;min-width:120px}
+
+.severity{font-size:1.1rem;font-weight:600;margin-bottom:8px;text-align:center}
+.detail{font-size:.88rem;color:#555;text-align:center;margin-bottom:14px}
+
+.severity-visuals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+                  gap:14px;margin:18px 0}
+.visual-panel{background:#f7faf7;border:1px solid #d8e6d8;border-radius:14px;
+              padding:12px}
+.visual-title{font-size:.9rem;font-weight:700;color:#1b5e20;margin-bottom:10px}
+.analysis-image{width:100%;height:220px;object-fit:contain;background:#fff;
+                border-radius:10px;border:1px solid #dfe7df}
+.visual-caption{font-size:.8rem;line-height:1.45;color:#5c6b5c;margin-top:8px}
+
+.breakdown{background:#f9f9f9;border-radius:10px;padding:14px;margin-top:6px}
+.breakdown-title{font-weight:700;font-size:.9rem;margin-bottom:10px;color:#333}
+.formula-text{font-size:.82rem;color:#666;margin-bottom:12px;line-height:1.45}
+.breakdown-row{display:flex;align-items:center;gap:10px;
+               margin-bottom:7px;font-size:.85rem}
+.breakdown-row span:first-child{width:110px;flex-shrink:0;color:#555}
+.breakdown-row span:last-child{width:40px;text-align:right;font-weight:600}
+.mini-bar{flex:1;height:10px;background:#e0e0e0;border-radius:5px;overflow:hidden}
+.mini-fill{height:100%;border-radius:5px;transition:width .5s}
+
+/* Treatment card */
+.treatment-card{}
+.urgency{font-weight:600;font-size:.95rem;margin-bottom:14px;text-align:center}
+
+.treatment-table{width:100%;border-collapse:collapse;margin-bottom:14px;
+                 font-size:.9rem}
+.treatment-table td{padding:7px 10px;border-bottom:1px solid #f0f0f0}
+.treatment-table td:first-child{color:#666;width:90px;white-space:nowrap}
+
+.warning-box{background:#fff3e0;border-left:3px solid #FF9800;
+             border-radius:0;padding:10px 14px;font-size:.87rem;
+             color:#e65100;margin-bottom:10px;line-height:1.5}
+.warning-yellow{background:#fff8e1;border-color:#FFC107;color:#856404}
+
+.advice-box{background:#f1f8e9;border-left:3px solid #8BC34A;
+            padding:10px 14px;font-size:.87rem;color:#33691e;
+            margin-bottom:8px;line-height:1.5}
+
+.reason-text{font-size:.82rem;color:#888;margin-top:10px;
+             font-style:italic;line-height:1.5}
+
+.loader{width:40px;height:40px;border:4px solid #c8e6c9;
+        border-top-color:#4CAF50;border-radius:50%;
+        animation:spin .8s linear infinite;margin:20px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media (max-width:640px){
+  .app{margin:24px auto;padding:16px}
+  .breakdown-row{gap:8px}
+  .breakdown-row span:first-child{width:96px}
+  .analysis-image{height:180px}
+}
