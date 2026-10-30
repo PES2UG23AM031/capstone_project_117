@@ -1,0 +1,14 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchvision
+transformers
+sentence-transformers
+flask
+flask-cors
+gunicorn
+pillow
+numpy
+opencv-python-headless
+matplotlib
+chromadb
+groq

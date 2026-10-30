@@ -1,0 +1,52 @@
+{
+  "architectures": [
+    "ViTForImageClassification"
+  ],
+  "attention_probs_dropout_prob": 0.0,
+  "dtype": "float32",
+  "encoder_stride": 16,
+  "hidden_act": "gelu",
+  "hidden_dropout_prob": 0.0,
+  "hidden_size": 768,
+  "id2label": {
+    "0": "BacterialBlight",
+    "1": "BlackSpot",
+    "2": "Canker",
+    "3": "CurlVirus",
+    "4": "DeficiencyLeaf",
+    "5": "DryLeaf",
+    "6": "Greening",
+    "7": "Healthy",
+    "8": "LeafMiner",
+    "9": "Melanose",
+    "10": "SootyMould",
+    "11": "SpiderMites"
+  },
+  "image_size": 224,
+  "initializer_range": 0.02,
+  "intermediate_size": 3072,
+  "label2id": {
+    "BacterialBlight": 0,
+    "BlackSpot": 1,
+    "Canker": 2,
+    "CurlVirus": 3,
+    "DeficiencyLeaf": 4,
+    "DryLeaf": 5,
+    "Greening": 6,
+    "Healthy": 7,
+    "LeafMiner": 8,
+    "Melanose": 9,
+    "SootyMould": 10,
+    "SpiderMites": 11
+  },
+  "layer_norm_eps": 1e-12,
+  "model_type": "vit",
+  "num_attention_heads": 12,
+  "num_channels": 3,
+  "num_hidden_layers": 12,
+  "patch_size": 16,
+  "pooler_act": "tanh",
+  "pooler_output_size": 768,
+  "qkv_bias": true,
+  "transformers_version": "5.15.0"
+}
