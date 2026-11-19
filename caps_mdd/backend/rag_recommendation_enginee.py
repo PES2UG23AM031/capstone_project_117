@@ -257,46 +257,38 @@ def synthesize_recommendation(case: dict, evidence: dict) -> dict:
             "reason":                 f"Disease not found in knowledge base: {case.get('disease', '')}",
         }
 
-    # ── LLM synthesis ─────────────────────────────────────────────────────────
-    client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+    # ── LLM synthesis via Groq or Grounded ChromaDB Fallback ──────────────────
+    groq_api_key = os.environ.get("GROQ_API_KEY")
+    llm_output = None
 
-    user_prompt = build_llm_prompt(case, evidence)
+    if groq_api_key:
+        try:
+            client = Groq(api_key=groq_api_key)
+            user_prompt = build_llm_prompt(case, evidence)
+            groq_model = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
+            response = client.chat.completions.create(
+                model=groq_model,
+                max_tokens=1024,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user",   "content": user_prompt},
+                ],
+            )
+            raw_text = response.choices[0].message.content.strip()
 
-    try:
-        response = client.chat.completions.create(
-            model      = "llama-3.3-70b-versatile",
-            max_tokens = 1024,
-            messages   = [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user",   "content": user_prompt},
-            ],
-        )
+            if raw_text.startswith("```"):
+                raw_text = raw_text.split("```")[1]
+                if raw_text.startswith("json"):
+                    raw_text = raw_text[4:]
+            llm_output = json.loads(raw_text)
+        except Exception as e:
+            # Fall back to grounded vector evidence
+            llm_output = synthesize_from_evidence(case, evidence, failure_reason=str(e))
+    else:
+        # No GROQ API key: generate directly from retrieved ChromaDB chunks
+        llm_output = synthesize_from_evidence(case, evidence)
 
-        raw_text = response.choices[0].message.content.strip()
-
-        # Strip any accidental markdown fences
-        if raw_text.startswith("```"):
-            raw_text = raw_text.split("```")[1]
-            if raw_text.startswith("json"):
-                raw_text = raw_text[4:]
-
-        llm_output = json.loads(raw_text)
-
-    except json.JSONDecodeError as e:
-        # Fallback: return partial result with error note
-        llm_output = {
-            "recommended_treatment": "LLM parse error — consult agronomist",
-            "warning":               f"JSON parse error: {e}",
-            "reason":                "LLM output could not be parsed.",
-        }
-    except Exception as e:
-        llm_output = {
-            "recommended_treatment": "LLM error — consult agronomist",
-            "warning":               f"API error: {e}",
-            "reason":                "LLM call failed.",
-        }
-
-    # ── Merge LLM output with case metadata ──────────────────────────────────
+    # ── Merge output with case metadata ──────────────────────────────────────
     result = {
         "disease":        case["disease"],
         "full_name":      case["full_name"],
@@ -308,7 +300,12 @@ def synthesize_recommendation(case: dict, evidence: dict) -> dict:
         **llm_output,
     }
 
-    # Ensure low_confidence_warning is set if LLM omitted it
+    if "treatment" not in result and "recommended_treatment" in result:
+        result["treatment"] = result["recommended_treatment"]
+    elif "recommended_treatment" not in result and "treatment" in result:
+        result["recommended_treatment"] = result["treatment"]
+
+    # Ensure low_confidence_warning is set if omitted
     if case.get("low_confidence") and not result.get("low_confidence_warning"):
         result["low_confidence_warning"] = (
             f"Model confidence is {case['confidence']}% — below threshold. "
@@ -316,6 +313,101 @@ def synthesize_recommendation(case: dict, evidence: dict) -> dict:
         )
 
     return result
+
+
+def synthesize_from_evidence(case: dict, evidence: dict, failure_reason: str = None) -> dict:
+    """
+    Directly synthesize a structured recommendation from the retrieved ChromaDB chunks
+    when Groq LLM API is unavailable or offline.
+    """
+    treatment_chunks = evidence.get("treatment_chunks", [])
+    cultural_chunks = evidence.get("cultural_chunks", [])
+
+    product = None
+    dose = None
+    timing = None
+    interval = None
+    method = None
+    warning = None
+    organic = None
+
+    if treatment_chunks:
+        chosen = treatment_chunks[0]
+        if case.get("severity_label") in ("Mild", "Moderate"):
+            for c in treatment_chunks:
+                if str(c.get("metadata", {}).get("organic")).lower() in ("true", "yes"):
+                    chosen = c
+                    break
+        elif case.get("severity_label") in ("Severe", "Critical"):
+            for c in treatment_chunks:
+                if str(c.get("metadata", {}).get("organic")).lower() in ("false", "no"):
+                    chosen = c
+                    break
+
+        meta = chosen.get("metadata", {})
+        product = meta.get("product")
+        for line in chosen.get("text", "").splitlines():
+            line_str = line.strip()
+            if line_str.startswith("Product:"):
+                product = line_str.split(":", 1)[1].strip()
+            elif line_str.startswith("Dose:"):
+                dose = line_str.split(":", 1)[1].strip()
+            elif line_str.startswith("Application timing:"):
+                timing = line_str.split(":", 1)[1].strip()
+            elif line_str.startswith("Application interval:"):
+                interval = line_str.split(":", 1)[1].strip()
+            elif line_str.startswith("Method:"):
+                method = line_str.split(":", 1)[1].strip()
+            elif line_str.startswith("Warning:"):
+                warning = line_str.split(":", 1)[1].strip()
+            elif line_str.startswith("Organic:"):
+                organic = line_str.split(":", 1)[1].strip().lower() in ("yes", "true")
+
+    cultural_advice = "Remove affected leaves and sanitize orchard tools."
+    monitoring = "Inspect orchard weekly."
+    if cultural_chunks:
+        for line in cultural_chunks[0].get("text", "").splitlines():
+            line_str = line.strip()
+            if line_str.startswith("Cultural management:"):
+                cultural_advice = line_str.split(":", 1)[1].strip()
+            elif line_str.startswith("Monitoring guidance:"):
+                monitoring = line_str.split(":", 1)[1].strip()
+
+    recommended_treatment = f"Apply {product}" if product else "Consult local agricultural extension officer"
+
+    urgency_map = {
+        "None": "No treatment needed — healthy plant.",
+        "Monitor": "Low urgency — monitor and apply organic control if symptoms persist.",
+        "Treat": "Moderate urgency — apply recommended treatment within 2–3 days.",
+        "Treat urgently": "High urgency — initiate therapeutic treatment immediately.",
+        "Emergency — consult expert": "CRITICAL — isolate affected trees and immediately apply emergency control measures.",
+    }
+
+    reason = (
+        f"Grounded in retrieved RAG knowledge for {case['disease']} at {case['severity_label']} severity level. "
+        f"{'Selected organic option for early/moderate stage.' if organic else 'Selected chemical therapeutic option due to severity.'}"
+    )
+
+    return {
+        "recommended_treatment": recommended_treatment,
+        "treatment":             recommended_treatment,
+        "product":               product,
+        "dose":                  dose or "As per manufacturer label instructions",
+        "timing":                timing or "Apply in early morning or late afternoon",
+        "interval":              interval or "Repeat every 10–14 days as needed",
+        "method":                method or "Foliar spray",
+        "warning":               warning or "Ensure proper protective gear and follow weather safety guidelines.",
+        "organic":               organic,
+        "cultural_advice":       cultural_advice,
+        "monitoring":            monitoring,
+        "urgency_note":          urgency_map.get(case.get("treatment_need"), "Inspect regularly."),
+        "reason":                reason,
+        "low_confidence_warning": (
+            f"Model confidence is {case['confidence']}% — below threshold (60%). Visually verify before treating."
+            if case.get("low_confidence") else None
+        ),
+        "source": "rag_vector_search" if not failure_reason else f"rag_vector_search (fallback: {failure_reason})"
+    }
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -358,9 +450,9 @@ if __name__ == "__main__":
     ]
 
     for disease, conf, score, label in test_cases:
-        print(f"\n{'═'*60}")
+        print("\n" + "="*60)
         print(f"  Disease: {disease}  |  Confidence: {conf}%  |  Severity: {label}")
-        print(f"{'═'*60}")
+        print("="*60)
         rec = get_recommendation(disease, conf, score, label)
         print(f"  Treatment : {rec.get('recommended_treatment')}")
         print(f"  Dose      : {rec.get('dose')}")

@@ -11,6 +11,7 @@ Run once to build the vector store:
     python rag_knowledge_base.py
 """
 
+import os
 import json
 import chromadb
 from chromadb.utils import embedding_functions
@@ -421,7 +422,9 @@ def build_chunks() -> list[dict]:
 # VECTOR STORE — ChromaDB with sentence-transformers embedding
 # ══════════════════════════════════════════════════════════════════════════════
 
-CHROMA_PATH       = "./citrus_rag_db"
+BASE_DIR          = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_CHROMA_PATH = os.path.join(BASE_DIR, "citrus_rag_db")
+CHROMA_PATH       = os.environ.get("CHROMA_PATH", DEFAULT_CHROMA_PATH)
 COLLECTION_NAME   = "citrus_treatments"
 EMBED_MODEL_NAME  = "all-MiniLM-L6-v2"   # fast, good quality, runs locally
 
