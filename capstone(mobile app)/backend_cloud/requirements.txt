@@ -8,6 +8,7 @@ flask-cors
 gunicorn
 pillow
 numpy
+scipy
 opencv-python-headless
 matplotlib
 chromadb
