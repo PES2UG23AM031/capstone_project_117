@@ -1,0 +1,62 @@
+
+{
+  "expo": {
+    "name": "Plant Disease Detector",
+    "slug": "citrus-health-ai",
+    "version": "1.0.0",
+    "sdkVersion": "54.0.0",
+    "icon": "./assets/images/app-icon.png",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Plant Disease Detector to access your photos.",
+          "cameraPermission": "Allow Plant Disease Detector to use the camera."
+        }
+      ],
+      "expo-asset",
+      "expo-localization"
+    ],
+
+    "android": {
+      "package": "com.divya.citrushealth",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/app-icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+
+    "ios": {
+      "icon": "./assets/images/app-icon.png",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Used to capture leaf images for disease detection.",
+        "NSPhotoLibraryUsageDescription": "Used to pick leaf images from your gallery."
+      }
+    },
+
+    "extra": {
+      "eas": {
+        "projectId": "3e62e1b8-6c03-4077-a59d-46007aaffeaa"
+      }
+    },
+
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+
+    "updates": {
+      "url": "https://u.expo.dev/3e62e1b8-6c03-4077-a59d-46007aaffeaa"
+    }
+  }
+}
